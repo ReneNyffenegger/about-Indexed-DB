@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+  <title>indexed DB</title>
+</head>
+<script type="text/javascript">
+
+var log_div;
+function log(t) {
+  log_div.innerHTML += '<br>' + t;
+}
+
+function main() {
+
+    log_div = document.getElementById('log');
+
+ //
+ // Request opening a database connection:
+ //
+    var request = indexedDB.open(
+        /* DB Name:    */ 'tq84.db',
+        /* Version nr: */        1
+    );
+    log('request: ' + request); // object IDBOpenDBRequest
+
+    request.onerror   = function(event) {
+     //
+     // onerror might be triggered, for example, if the
+     // version number is decreased
+     //
+        log ('opening DB: error ');
+        log ('- ' + request.error.name);
+        log ('- ' + request.error.message);
+
+
+    }
+
+    request.onupgradeneeded = function(event) {
+     //
+     // onupgradeneeded is triggered when either the db is new
+     // or the version number was increased
+     //
+        log ('opening DB: upgrade needed');
+        log ('- old version: ' + event.oldVersion);
+        log ('- new version: ' + event.newVersion);
+
+
+        let db = request.result;
+
+        db.onerror = function(event) { log('error with db in onupgradeneeded'); }
+
+        let objStoreFoo = db.createObjectStore('foo');
+
+        log('objStoreFoo: ' + objStoreFoo); // object IDBDatabase
+
+    }
+
+    request.onsuccess = function(event) {
+        log ('opening DB: success');
+     //
+     // Get database object:
+     //
+        let db = request.result;
+        log ('db: ' + db);  // object IDBDatabase
+        
+        db.onerror = function(event) {
+           log('error with db in onsuccess');
+           log ('- old version: ' + event.oldVersion);
+           log ('- new version: ' + event.newVersion);
+        
+        }
+
+        let objStoreBar = db.createObjectStore('bar');
+
+     //
+     // clean up the mess…
+     //
+        indexedDB.deleteDatabase('tq84.db');
+    
+    }
+
+}
+
+</script>
+<body onload='main()'>
+
+  <div id='log'>
+  </div>
+
+</body>
+</html>
